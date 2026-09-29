@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RescueNet | Emergency Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/static/styles.css">
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script defer src="/static/app.js"></script>
+</head>
+<body>
+<div id="toast" role="status"></div>
+<div id="loginScreen" class="login-screen">
+  <div class="login-shell">
+    <div class="login-brand"><span class="brand-symbol"><i data-lucide="plus"></i></span><div><strong>RescueNet</strong><span>Emergency Operations Network</span></div></div>
+    <div class="login-copy"><span class="kicker">DURG · BHILAI</span><h1>One command center for every emergency.</h1><p>Coordinate incidents, hospital capacity and destination allocation through a single operational workspace.</p></div>
+    <form id="loginForm" class="login-form">
+      <label>Work email<input type="email" value="admin@rescuenet.demo" required autocomplete="username"></label>
+      <label>Password<input type="password" value="RescueNet123" required autocomplete="current-password"></label>
+      <button class="btn primary full" type="submit"><span>Enter command center</span><i data-lucide="arrow-right"></i></button>
+    </form>
+    <div class="login-footer"><span class="secure-dot"></span> Demonstration environment · Durg–Bhilai</div>
+  </div>
+  <div class="login-visual"><div class="pulse-ring"></div><div class="radar-card"><span class="radar-label">NETWORK STATUS</span><strong>Operational</strong><small>5 active incident scenarios</small><div class="radar-lines"><i></i><i></i><i></i></div></div></div>
+</div>
+
+<div id="app" class="hidden">
+<aside class="sidebar">
+  <div class="sidebar-brand"><span class="brand-symbol"><i data-lucide="plus"></i></span><div><strong>RescueNet</strong><small>Emergency Operations</small></div></div>
+  <div class="side-label">CONTROL CENTER</div>
+  <nav>
+    <button class="nav active" data-page="overview"><i data-lucide="layout-dashboard"></i><span>Overview</span></button>
+    <button class="nav" data-page="incidents"><i data-lucide="siren"></i><span>Incidents</span><em id="incidentBadge">0</em></button>
+    <button class="nav" data-page="hospitals"><i data-lucide="hospital"></i><span>Hospitals</span></button>
+    <button class="nav" data-page="allocation"><i data-lucide="route"></i><span>Allocation</span></button>
+    <button class="nav" data-page="map"><i data-lucide="map"></i><span>Live Map</span></button>
+    <button class="nav" data-page="audit"><i data-lucide="history"></i><span>Activity</span></button>
+  </nav>
+  <div class="sidebar-status"><div><span class="status-dot"></span><div><strong>Network operational</strong><small>All systems responding</small></div></div><button id="logout" class="logout"><i data-lucide="log-out"></i> Sign out</button></div>
+</aside>
+<main>
+<header class="topbar"><div class="top-title"><span class="location"><i data-lucide="map-pin"></i> DURG · CHHATTISGARH</span><h2 id="pageTitle">Operations overview</h2></div><div class="top-actions"><span class="live-pill"><span></span> LIVE DEMO</span><div class="profile"><span class="avatar">EC</span><div><strong>Emergency Coordinator</strong><small>Operations desk</small></div><i data-lucide="chevron-down"></i></div></div></header>
+<div class="content">
+<section id="overview" class="page active">
+  <div class="hero hero-dashboard"><div><span class="kicker">EMERGENCY OPERATIONS</span><h1>Citywide response overview</h1><p>Monitor incidents, facility capacity and destination decisions across the Durg–Bhilai network.</p></div><button class="btn primary" onclick="showPage('allocation')"><i data-lucide="crosshair"></i> Allocate incident</button></div>
+  <div class="stats"><div class="stat accent-blue"><div class="stat-icon"><i data-lucide="siren"></i></div><span>Open incidents</span><strong id="sOpen">0</strong><small>requiring coordination</small></div><div class="stat"><div class="stat-icon"><i data-lucide="hospital"></i></div><span>Hospitals</span><strong id="sHosp">0</strong><small>connected facilities</small></div><div class="stat accent-green"><div class="stat-icon"><i data-lucide="heart-pulse"></i></div><span>ICU capacity</span><strong id="sIcu">0</strong><small>demonstration snapshot</small></div><div class="stat accent-purple"><div class="stat-icon"><i data-lucide="wind"></i></div><span>Ventilators</span><strong id="sVent">0</strong><small>demonstration snapshot</small></div></div>
+  <div class="grid-main"><div class="panel map-panel"><div class="panel-head"><div><h3>Operational map</h3><p>Incidents and connected hospitals</p></div><button class="text-btn" onclick="showPage('map')">Open live map <i data-lucide="arrow-up-right"></i></button></div><div id="overviewMap" class="map"></div></div><div class="panel queue-panel"><div class="panel-head"><div><h3>Response queue</h3><p>Current incident dispatch</p></div><span class="panel-live"><span></span> Updating</span></div><div id="incidentList"></div></div></div>
+</section>
+<section id="incidents" class="page"><div class="hero"><div><span class="kicker">INCIDENT CONTROL</span><h1>Emergency incidents</h1><p>Five realistic demonstration incidents distributed across the city network.</p></div></div><div class="panel table-panel"><div class="table-toolbar"><div><strong>Incident register</strong><small>All active scenarios</small></div><span class="table-count" id="incidentCount">0 incidents</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Location</th><th>Medical need</th><th>Status</th><th></th></tr></thead><tbody id="incidentTable"></tbody></table></div></div></section>
+<section id="hospitals" class="page"><div class="hero"><div><span class="kicker">FACILITY NETWORK</span><h1>Connected hospitals</h1><p>Facility identity and public capacity information used in this demonstration.</p></div></div><div id="hospitalGrid" class="hospital-grid"></div><div class="source-note"><i data-lucide="info"></i><span>Resource figures are a demonstration snapshot based on publicly available hospital information, not live bed availability. Confirm availability with the hospital before real-world transfer.</span></div></section>
+
+<section id="allocation" class="page">
+  <div class="hero"><div><span class="kicker">DESTINATION CONTROL</span><h1>Smart hospital allocation</h1><p>Inspect every connected facility by zone, clinical service and available emergency resources before confirming a destination.</p></div><div class="hero-live"><span class="pulse-dot"></span> Network scan ready</div></div>
+
+  <div class="allocation-command panel">
+    <div class="command-top">
+      <div><span class="eyebrow">01 · INCIDENT</span><h3>Choose the emergency case</h3><p>The selected case drives the requirement check and Dijkstra route calculation.</p></div>
+      <div class="incident-mini"><span id="allocCaseBadge">ACC-101</span><strong id="allocCaseNeed">ICU + Ventilator</strong></div>
+    </div>
+    <div class="command-controls">
+      <label class="wide-field">Incident<select id="allocIncident"></select></label>
+      <div class="need-chips" id="needChips"></div>
+      <button class="btn primary" onclick="runAllocation()"><i data-lucide="zap"></i> Run allocation</button>
+    </div>
+  </div>
+
+  <div class="network-board">
+    <div class="network-head">
+      <div><span class="eyebrow">02 · FACILITY RADAR</span><h3>Hospital resource board</h3><p>Filter the network before making a destination decision.</p></div>
+      <div class="scan-status"><span class="pulse-dot"></span><span id="facilityCount">4 facilities</span> scanned</div>
+    </div>
+    <div class="filter-strip">
+      <div class="filter-group"><span>Incident zone</span><div class="segmented" id="zoneFilters"><button class="active" data-zone="ALL">All zones</button><button data-zone="LOC-A">LOC A</button><button data-zone="LOC-B">LOC B</button><button data-zone="LOC-C">LOC C</button></div></div>
+      <div class="filter-group"><span>Required service</span><div class="segmented" id="serviceFilters"><button class="active" data-service="ALL">All services</button><button data-service="ICU">ICU</button><button data-service="Cardiology">Cardiology</button><button data-service="Emergency">Emergency</button><button data-service="Orthopaedics">Orthopaedics</button></div></div>
+    </div>
+    <div id="hospitalRadar" class="hospital-radar"></div>
+  </div>
+
+  <div class="allocation-bottom">
+    <div id="allocationResult" class="panel result-panel"><div class="empty"><div class="empty-icon"><i data-lucide="route"></i></div><h3>Ready for destination calculation</h3><p>Choose an incident, inspect the facility radar, then run RescueNet's allocation engine.</p></div></div>
+    <div class="panel insight-panel">
+      <div class="panel-head"><div><h3>Response intelligence</h3><p>Live scenario snapshot</p></div><i data-lucide="activity"></i></div>
+      <div id="allocationInsights"></div>
+    </div>
+  </div>
+</section>
+
+<section id="map" class="page"><div class="hero"><div><span class="kicker">GEOSPATIAL OPERATIONS</span><h1>Live route network</h1><p>OpenStreetMap view of the Durg–Bhilai operating area.</p></div><div class="map-legend"><span><i class="legend-dot incident"></i> Incident</span><span><i class="legend-dot hospital"></i> Hospital</span></div></div><div class="panel map-full-panel"><div id="mainMap" class="map big-map"></div></div></section>
+<section id="audit" class="page"><div class="hero"><div><span class="kicker">OPERATIONS LOG</span><h1>Activity history</h1><p>Recommendations and confirmed allocations recorded by the system.</p></div></div><div class="panel table-panel"><div class="table-toolbar"><div><strong>System activity</strong><small>Most recent events first</small></div></div><div class="table-wrap"><table><thead><tr><th>Event</th><th>Incident</th><th>Hospital</th><th>Source</th><th>Time</th></tr></thead><tbody id="auditTable"></tbody></table></div></div></section>
+</div></main></div>
+</body></html>
